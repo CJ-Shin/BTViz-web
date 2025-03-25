@@ -1,38 +1,28 @@
-"use client"; 
+"use client";
 
 /**
- * Requests a BLE device by name, optionally including additional services.
- * @param deviceName - The exact device name to filter for.
- * @param optionalServiceUUIDs - An array of service UUIDs (16-bit or 128-bit) to be requested.
- * @returns A Promise that resolves to the found BluetoothDevice.
+ * MIRAS 디바이스를 요청합니다.
+ * 이름이 "MIRAS"인 기기를 찾으며, 지정된 서비스 UUID를 사용합니다.
  */
-export async function requestDeviceByName(
-    deviceName: string,
-    optionalServiceUUIDs: number | string
-): Promise<BluetoothDevice> {
+export async function requestMIRASDevice(): Promise<BluetoothDevice> {
     if (typeof navigator === "undefined" || !navigator.bluetooth) {
         throw new Error("Web Bluetooth is not supported in this browser/environment.");
     }
-
     try {
         const device = await navigator.bluetooth.requestDevice({
-            filters: [{ name: deviceName }],
-            optionalServices: [optionalServiceUUIDs],
+            filters: [{ name: "MIRAS" }],
+            optionalServices: ["3843D836-4F99-346C-B334-CCC8E9DFAFAB"],
         });
         return device;
     } catch (error: any) {
-        throw new Error(`Error requesting device: ${error.message}`);
+        throw new Error(`Error requesting MIRAS device: ${error.message}`);
     }
 }
 
 /**
- * Connects to the GATT server of a given BluetoothDevice.
- * @param device - The BluetoothDevice to connect to.
- * @returns A Promise that resolves to the BluetoothRemoteGATTServer.
+ * 주어진 BluetoothDevice의 GATT 서버에 연결합니다.
  */
-export async function connectGATT(
-    device: BluetoothDevice
-): Promise<BluetoothRemoteGATTServer> {
+export async function connectGATT(device: BluetoothDevice): Promise<BluetoothRemoteGATTServer> {
     if (!device) {
         throw new Error("No device provided.");
     }
@@ -45,93 +35,60 @@ export async function connectGATT(
 }
 
 /**
- * Retrieves the primary service on a given GATT server.
- * @param server - The BluetoothRemoteGATTServer.
- * @param serviceUUID - A 16-bit or 128-bit service UUID.
- * @returns A Promise that resolves to the BluetoothRemoteGATTService.
+ * GATT 서버에서 MIRAS 서비스 (지정된 UUID)를 가져옵니다.
  */
-export async function getPrimaryService(
-    server: BluetoothRemoteGATTServer,
-    serviceUUID: number | string
-): Promise<BluetoothRemoteGATTService> {
-    if (!server) {
-        throw new Error("No GATT server provided.");
-    }
-
+export async function getMIRASService(server: BluetoothRemoteGATTServer): Promise<BluetoothRemoteGATTService> {
     try {
-        const service = await server.getPrimaryService(serviceUUID);
+        const service = await server.getPrimaryService("3843D836-4F99-346C-B334-CCC8E9DFAFAB");
         return service;
     } catch (error: any) {
-        throw new Error(`Failed to get primary service: ${error.message}`);
+        throw new Error(`Failed to get MIRAS service: ${error.message}`);
     }
 }
 
 /**
- * Retrieves a characteristic from the specified service.
- * @param service - The BluetoothRemoteGATTService.
- * @param characteristicUUID - A 16-bit or 128-bit characteristic UUID.
- * @returns A Promise that resolves to the BluetoothRemoteGATTCharacteristic.
+ * 지정된 서비스에서 특성을 가져옵니다.
+ * 기본값으로 MIRAS 디바이스의 UUID("3843D836-4F99-346C-B334-CCC8E9DFAFAB")를 사용하지만,
+ * 만약 특성 UUID가 다르다면 매개변수로 전달하세요.
  */
-export async function getCharacteristic(
+export async function getMIRASCharacteristic(
     service: BluetoothRemoteGATTService,
-    characteristicUUID: number | string
+    characteristicUUID: number | string = "3843D836-4F99-346C-B334-CCC8E9DFAFAB"
 ): Promise<BluetoothRemoteGATTCharacteristic> {
-    if (!service) {
-        throw new Error("No GATT service provided.");
-    }
-
-    // const device = characteristic.service?.device;
-    // if (!device || !device.gatt.connected) {
-    //     throw new Error("Device is not connected.");
-    // }
-
     try {
         const characteristic = await service.getCharacteristic(characteristicUUID);
         return characteristic;
     } catch (error: any) {
-        throw new Error(`Failed to get characteristic: ${error.message}`);
+        throw new Error(`Failed to get MIRAS characteristic: ${error.message}`);
     }
 }
 
 /**
- * Reads a value from the provided characteristic.
- * @param characteristic - The BluetoothRemoteGATTCharacteristic.
- * @returns A Promise that resolves to the DataView containing the characteristic data.
+ * MIRAS 특성의 알림을 시작하고, 수신된 데이터를 처리합니다.
  */
-export async function readCharacteristicValue(
+export async function startMIRASNotifications(
     characteristic: BluetoothRemoteGATTCharacteristic
-): Promise<BluetoothRemoteGATTCharacteristic> {
-    if (!characteristic) {
-        throw new Error("No characteristic provided.");
-    }
-
-    const device = characteristic.service?.device;
-    if (!device || !device?.gatt?.connected) {
-        throw new Error("Device is not connected.");
-    }
-
+): Promise<void> {
     try {
-        // Start notifications and wait for the promise to resolve.
+        await characteristic.startNotifications();
+        console.log("MIRAS notifications started!");
 
-        const notifiedCharacteristic = await characteristic.startNotifications();
-        console.log("Notifications Started!");
-
-        // Add an event listener to log each notification as it arrives.
-        return notifiedCharacteristic;
-    } catch (error) {
-        console.error("Error starting notifications:", error);
-        throw error;
+        characteristic.addEventListener("characteristicvaluechanged", event => {
+            const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
+            // 여기서 데이터를 알맞게 파싱하세요. 예제는 콤마로 구분된 문자열이라고 가정합니다.
+            const dataArray = new TextDecoder().decode(value).split(",");
+            console.log("Received MIRAS data:", dataArray);
+            // 이후 그래프 업데이트 등 추가 처리를 수행하세요.
+        });
+    } catch (error: any) {
+        throw new Error(`Error starting MIRAS notifications: ${error.message}`);
     }
 }
 
-
 /**
- * Utility to convert a DataView to a numeric array for logging or processing.
- * @param dataView - The DataView containing bytes.
- * @returns A number[] array of the bytes.
+ * DataView를 숫자 배열로 변환하는 유틸리티 함수입니다.
  */
 export function dataViewToArray(dataView: DataView): number[] {
-    // Option 1: Loop
     const array: number[] = [];
     for (let i = 0; i < dataView.byteLength; i++) {
         array.push(dataView.getUint8(i));
@@ -140,23 +97,18 @@ export function dataViewToArray(dataView: DataView): number[] {
 }
 
 /**
- * Utility to connect to SpectraDerma from start to finish.
- * @param deviceName - The exact name to filter by
- * @param optionalServiceUUID - the service we are looking for 
- * @param CharacteristicUUID - the characteristic we want from the service
- * @returns returns a characteristic whose value can be read
+ * MIRAS 디바이스에 처음부터 연결하고, 알림을 시작하는 전체 과정을 수행합니다.
+ * 반환 값은 알림이 시작된 특성입니다.
  */
-export async function connectToDevice(
-    deviceName: string,
-    optionalServiceUUID: number | string,
-    serviceUUID: number | string
-): Promise<BluetoothRemoteGATTCharacteristic>{
+export async function connectToMIRAS(): Promise<BluetoothRemoteGATTCharacteristic> {
     try {
-        const device = await requestDeviceByName(deviceName, optionalServiceUUID);
+        const device = await requestMIRASDevice();
         const server = await connectGATT(device);
-        const service = await getPrimaryService(server, optionalServiceUUID)
-        return await getCharacteristic(service, serviceUUID);
+        const service = await getMIRASService(server);
+        const characteristic = await getMIRASCharacteristic(service);
+        await startMIRASNotifications(characteristic);
+        return characteristic;
     } catch (error: any) {
-        return (error.message || error.toString());
+        throw new Error(`Failed to connect to MIRAS device: ${error.message}`);
     }
 }
