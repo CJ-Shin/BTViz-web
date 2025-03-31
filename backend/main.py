@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     yield firestore.client()
     Request.app.state.db = firestore.client()
 
-app = FastAPI(title="SpectraDerma Web Receiver",
+app = FastAPI(title="MIRAS Web Receiver",
               description="This is the BLE Web Receiver",
               version="0.1.0",
               lifespan=lifespan
