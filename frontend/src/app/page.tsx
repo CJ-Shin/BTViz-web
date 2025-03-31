@@ -18,7 +18,7 @@ import { Eye, EyeOff } from 'lucide-react';
 
 export default function Home() {
   // global consts do not touch
-  const deviceName: string = "SpectraDerma"
+  const deviceName: string = MIRAS"
   const optionalServiceUUID: number = 0xACEF
   const optionalCharacteristicUUID: number = 0xFF01
 
@@ -108,7 +108,7 @@ export default function Home() {
   try {
     const currentDate = new Date().toISOString();
 
-    const docRef = doc(db, "spectradermadata", currentDate);
+    const docRef = doc(db, "MIRASdata", currentDate);
     await setDoc(docRef, batchData);
     
     // console.log("Batch data sent to Firebase with ID:", docRef.id);
@@ -144,7 +144,7 @@ export default function Home() {
       <Card className="mx-auto w-11/12 h-full">
         <CardHeader >
           <CardTitle style={{ fontSize: '30px' }}>
-              SpectraDerma Connection
+              MIRAS Connection
           </CardTitle>
           <CardDescription style={{ fontSize: '16px' }}>
               <p>Connect to your device via BLE</p>
@@ -155,7 +155,7 @@ export default function Home() {
           <div>
             <p>Ensure that the device is powered on and in pairing mode</p>
             <p className="flex justify-center text-lg text-gray-700">
-              {isConnected ? `Connected to: ${"SpectraDerma"}` : 'No device connected'}
+              {isConnected ? `Connected to: ${"MIRAS"}` : 'No device connected'}
               
             </p>
           </div>
@@ -184,7 +184,7 @@ export default function Home() {
           <div>
             <Button onClick={handleScan} disabled={isConnected}
               className="bg-black text-white py-2 px-6  border-2 border-black hover:text-black transition-all duration-300">
-                {isConnected ? 'Reconnect' : 'Connect to SpectraDerma'}
+                {isConnected ? 'Reconnect' : 'Connect to MIRAS'}
             </Button>
           </div>       
         </CardFooter>
