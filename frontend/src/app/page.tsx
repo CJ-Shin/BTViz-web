@@ -18,7 +18,7 @@ import { Eye, EyeOff } from 'lucide-react';
 
 export default function Home() {
   // global consts do not touch
-  const deviceName: string = MIRAS"
+  const deviceName: string = "MIRAS";
   const optionalServiceUUID: number = 0xACEF
   const optionalCharacteristicUUID: number = 0xFF01
 
