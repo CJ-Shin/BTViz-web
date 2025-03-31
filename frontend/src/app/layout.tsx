@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BTVIZ - SpectraDerma",
-  description: "The SpectraDerma Bluetooth Visualizer",
+  title: "BTVIZ - MIRAS",
+  description: "The MIRAS Bluetooth Visualizer",
 };
 
 export default function RootLayout({
